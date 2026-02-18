@@ -1,6 +1,6 @@
 {
   "name": "vlist-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React hooks for vlist - lightweight virtual scrolling",
   "author": {
     "name": "Floor IO",

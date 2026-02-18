@@ -1,20 +1,17 @@
 // vlist-react
 /**
  * React hooks for vlist - lightweight virtual scrolling
- *
- * @packageDocumentation
  */
 
 import { useRef, useEffect, useCallback } from "react";
 import type {
   VListConfig,
   VListItem,
-  VList,
   VListEvents,
   EventHandler,
   Unsubscribe,
 } from "@floor/vlist";
-import { vlist } from "@floor/vlist";
+import { vlist, type BuiltVList } from "@floor/vlist";
 import {
   withAsync,
   withGrid,
@@ -26,63 +23,30 @@ import {
   withPage,
 } from "@floor/vlist";
 
-// =============================================================================
-// Types
-// =============================================================================
-
-/** Configuration for useVList (VListConfig without container) */
 export type UseVListConfig<T extends VListItem = VListItem> = Omit<
   VListConfig<T>,
   "container"
 >;
 
-/** Return value from the useVList hook */
 export interface UseVListReturn<T extends VListItem = VListItem> {
   containerRef: React.RefObject<HTMLDivElement | null>;
-  instanceRef: React.RefObject<VList<T> | null>;
-  getInstance: () => VList<T> | null;
+  instanceRef: React.RefObject<BuiltVList<T> | null>;
+  getInstance: () => BuiltVList<T> | null;
 }
 
-// =============================================================================
-// Hook
-// =============================================================================
-
-/**
- * React hook for vlist integration.
- *
- * @example
- * ```tsx
- * import { useVList } from 'vlist-react';
- * import '@floor/vlist/styles';
- *
- * function UserList({ users }) {
- *   const { containerRef, instanceRef } = useVList({
- *     item: {
- *       height: 48,
- *       template: (user) => `<div>${user.name}</div>`,
- *     },
- *     items: users,
- *   });
- *
- *   return <div ref={containerRef} style={{ height: 400 }} />;
- * }
- * ```
- */
 export function useVList<T extends VListItem = VListItem>(
   config: UseVListConfig<T>,
 ): UseVListReturn<T> {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const instanceRef = useRef<VList<T> | null>(null);
+  const instanceRef = useRef<BuiltVList<T> | null>(null);
   const configRef = useRef(config);
   configRef.current = config;
   const mountedRef = useRef(false);
 
-  // Create instance on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Build vlist with plugins
     let builder = vlist<T>({
       ...configRef.current,
       container,
@@ -108,7 +72,22 @@ export function useVList<T extends VListItem = VListItem>(
     }
 
     if (configRef.current.groups) {
-      builder = builder.use(withSections(configRef.current.groups));
+      const groupsConfig = configRef.current.groups;
+      const headerHeight =
+        typeof groupsConfig.headerHeight === "function"
+          ? groupsConfig.headerHeight("", 0)
+          : groupsConfig.headerHeight;
+
+      builder = builder.use(
+        withSections({
+          getGroupForIndex: groupsConfig.getGroupForIndex,
+          headerHeight,
+          headerTemplate: groupsConfig.headerTemplate,
+          ...(groupsConfig.sticky !== undefined && {
+            sticky: groupsConfig.sticky,
+          }),
+        }),
+      );
     }
 
     const selectionMode = configRef.current.selection?.mode || "none";
@@ -131,7 +110,7 @@ export function useVList<T extends VListItem = VListItem>(
     builder = builder.use(withSnapshots());
 
     const instance = builder.build();
-    instanceRef.current = instance as VList<T>;
+    instanceRef.current = instance;
     mountedRef.current = true;
 
     return () => {
@@ -141,7 +120,6 @@ export function useVList<T extends VListItem = VListItem>(
     };
   }, []);
 
-  // Sync items when they change
   useEffect(() => {
     if (!mountedRef.current || !instanceRef.current) return;
     if (config.items) {
@@ -149,7 +127,7 @@ export function useVList<T extends VListItem = VListItem>(
     }
   }, [config.items]);
 
-  const getInstance = useCallback((): VList<T> | null => {
+  const getInstance = useCallback((): BuiltVList<T> | null => {
     return instanceRef.current;
   }, []);
 
@@ -160,21 +138,11 @@ export function useVList<T extends VListItem = VListItem>(
   };
 }
 
-/**
- * Subscribe to vlist events within React lifecycle
- *
- * @example
- * ```tsx
- * useVListEvent(instanceRef, 'selection:change', ({ selected }) => {
- *   console.log('Selected:', selected);
- * });
- * ```
- */
 export function useVListEvent<
   T extends VListItem,
   K extends keyof VListEvents<T>,
 >(
-  instanceRef: React.RefObject<VList<T> | null>,
+  instanceRef: React.RefObject<BuiltVList<T> | null>,
   event: K,
   handler: EventHandler<VListEvents<T>[K]>,
 ): void {

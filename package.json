@@ -1,5 +1,5 @@
 {
-  "name": "@floor/vlist-react",
+  "name": "vlist-react",
   "version": "0.1.0",
   "description": "React hooks for vlist - lightweight virtual scrolling",
   "author": {

@@ -1,4 +1,4 @@
-// @floor/vlist-react
+// vlist-react
 /**
  * React hooks for vlist - lightweight virtual scrolling
  *
@@ -52,7 +52,7 @@ export interface UseVListReturn<T extends VListItem = VListItem> {
  *
  * @example
  * ```tsx
- * import { useVList } from '@floor/vlist-react';
+ * import { useVList } from 'vlist-react';
  * import '@floor/vlist/styles';
  *
  * function UserList({ users }) {

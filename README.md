@@ -1,17 +1,17 @@
-# @floor/vlist-react
+# vlist-react
 
 React hooks for [vlist](https://github.com/floor/vlist) - lightweight, zero-dependency virtual scrolling.
 
 ## Installation
 
 ```bash
-npm install @floor/vlist @floor/vlist-react
+npm install @floor/vlist vlist-react
 ```
 
 ## Usage
 
 ```tsx
-import { useVList } from '@floor/vlist-react';
+import { useVList } from 'vlist-react';
 import '@floor/vlist/styles';
 
 function UserList({ users }) {

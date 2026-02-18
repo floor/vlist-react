@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+bun.lockb
+.env
+.env.local
+.DS_Store
+*.log
+*.tgz

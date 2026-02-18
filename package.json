@@ -1,0 +1,57 @@
+{
+  "name": "@floor/vlist-react",
+  "version": "0.1.0",
+  "description": "React hooks for vlist - lightweight virtual scrolling",
+  "author": {
+    "name": "Floor IO",
+    "url": "https://floor.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/floor/vlist-react.git"
+  },
+  "keywords": [
+    "vlist",
+    "virtual-list",
+    "react",
+    "hooks",
+    "virtual-scrolling",
+    "typescript"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@floor/vlist": "^0.6.0",
+    "react": ">=17.0.0"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "!dist/**/*.d.ts.map"
+  ],
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@floor/vlist": "link:../vlist",
+    "@types/bun": "^1.0.0",
+    "@types/react": "^19.2.13",
+    "bun": "^1.0.0",
+    "react": "^19.2.4",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,14 +1,14 @@
 # vlist-react
 
-React hooks for [vlist](https://github.com/floor/vlist) - lightweight, zero-dependency virtual scrolling.
+React hooks for [@floor/vlist](https://github.com/floor/vlist) — lightweight, zero-dependency virtual scrolling.
 
-## Installation
+## Install
 
 ```bash
 npm install @floor/vlist vlist-react
 ```
 
-## Usage
+## Quick Start
 
 ```tsx
 import { useVList } from 'vlist-react';
@@ -29,19 +29,14 @@ function UserList({ users }) {
 
 ## API
 
-### `useVList(config)`
+- **`useVList(config)`** — Creates a virtual list. Returns `{ containerRef, instanceRef, getInstance }`.
+- **`useVListEvent(instanceRef, event, handler)`** — Subscribe to vlist events with automatic cleanup.
 
-**Parameters:**
-- `config` - VList configuration (same as core vlist, minus `container`)
-
-**Returns:**
-- `containerRef` - Ref to attach to your container element
-- `instanceRef` - Reference to the vlist instance
-- `getInstance()` - Helper function to get the instance
+Config accepts all [@floor/vlist options](https://vlist.dev/docs/api/reference) minus `container` (handled by the ref). Feature fields like `adapter`, `grid`, `groups`, `selection`, and `scrollbar` are translated into `.use(withX())` calls automatically.
 
 ## Documentation
 
-For full documentation, see [vlist.dev](https://vlist.dev)
+Full usage guide, feature config examples, and TypeScript types: **[Framework Adapters — React](https://vlist.dev/docs/frameworks#react)**
 
 ## License
 

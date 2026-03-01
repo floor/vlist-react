@@ -11,11 +11,11 @@ import type {
   EventHandler,
   Unsubscribe,
 } from "@floor/vlist";
-import { vlist, type BuiltVList } from "@floor/vlist";
+import { vlist, type VList } from "@floor/vlist";
 import {
   withAsync,
   withGrid,
-  withSections,
+  withGroups,
   withSelection,
   withScrollbar,
   withScale,
@@ -30,15 +30,15 @@ export type UseVListConfig<T extends VListItem = VListItem> = Omit<
 
 export interface UseVListReturn<T extends VListItem = VListItem> {
   containerRef: React.RefObject<HTMLDivElement | null>;
-  instanceRef: React.RefObject<BuiltVList<T> | null>;
-  getInstance: () => BuiltVList<T> | null;
+  instanceRef: React.RefObject<VList<T> | null>;
+  getInstance: () => VList<T> | null;
 }
 
 export function useVList<T extends VListItem = VListItem>(
   config: UseVListConfig<T>,
 ): UseVListReturn<T> {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const instanceRef = useRef<BuiltVList<T> | null>(null);
+  const instanceRef = useRef<VList<T> | null>(null);
   const configRef = useRef(config);
   configRef.current = config;
   const mountedRef = useRef(false);
@@ -79,7 +79,7 @@ export function useVList<T extends VListItem = VListItem>(
           : groupsConfig.headerHeight;
 
       builder = builder.use(
-        withSections({
+        withGroups({
           getGroupForIndex: groupsConfig.getGroupForIndex,
           headerHeight,
           headerTemplate: groupsConfig.headerTemplate,
@@ -127,7 +127,7 @@ export function useVList<T extends VListItem = VListItem>(
     }
   }, [config.items]);
 
-  const getInstance = useCallback((): BuiltVList<T> | null => {
+  const getInstance = useCallback((): VList<T> | null => {
     return instanceRef.current;
   }, []);
 
@@ -142,7 +142,7 @@ export function useVListEvent<
   T extends VListItem,
   K extends keyof VListEvents<T>,
 >(
-  instanceRef: React.RefObject<BuiltVList<T> | null>,
+  instanceRef: React.RefObject<VList<T> | null>,
   event: K,
   handler: EventHandler<VListEvents<T>[K]>,
 ): void {

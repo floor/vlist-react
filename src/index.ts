@@ -5,24 +5,26 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import type {
-  VListConfig,
   VListItem,
   VListEvents,
   EventHandler,
   Unsubscribe,
+  CreateVListConfig,
 } from "vlist";
-import { vlist, type VList } from "vlist";
 import {
-  withAsync,
-  withAutoSize,
-  withGrid,
-  withMasonry,
-  withGroups,
-  withSelection,
-  withScrollbar,
-  withScale,
-  withSnapshots,
-  withPage,
+  createVList as createVListCore,
+  page,
+  autosize,
+  async as asyncPlugin,
+  grid,
+  masonry,
+  groups,
+  selection,
+  scale,
+  scrollbar,
+  snapshots,
+  type VList,
+  type VListPlugin,
 } from "vlist";
 
 // Re-export types that appear in UseVListConfig / UseVListReturn
@@ -30,7 +32,7 @@ export type {
   VListItem,
   VListEvents,
   VList,
-  VListConfig,
+  CreateVListConfig,
   ItemConfig,
   ItemTemplate,
   EventHandler,
@@ -38,7 +40,7 @@ export type {
 } from "vlist";
 
 export type UseVListConfig<T extends VListItem = VListItem> = Omit<
-  VListConfig<T>,
+  CreateVListConfig<T>,
   "container"
 >;
 
@@ -61,86 +63,76 @@ export function useVList<T extends VListItem = VListItem>(
     const container = containerRef.current;
     if (!container) return;
 
-    let builder = vlist<T>({
-      ...configRef.current,
-      container,
-    });
+    const cfg = configRef.current;
+    const plugins: VListPlugin<T>[] = [];
 
-    if (configRef.current.scroll?.element === window) {
-      builder = builder.use(withPage());
+    if (cfg.scroll?.element === window) {
+      plugins.push(page());
     }
 
-    // Auto-detect Mode B: estimatedHeight/estimatedWidth without explicit height/width
-    const item = configRef.current.item;
-    const isHorizontal = configRef.current.orientation === "horizontal";
-    const hasExplicitSize = isHorizontal
-      ? item.width != null
-      : item.height != null;
+    // Auto-detect Mode B
+    const item = cfg.item;
+    const isHorizontal = cfg.orientation === "horizontal";
+    const hasExplicitSize = isHorizontal ? item.width != null : item.height != null;
     const hasEstimate = isHorizontal
       ? (item as unknown as Record<string, unknown>).estimatedWidth != null
       : (item as unknown as Record<string, unknown>).estimatedHeight != null;
     if (!hasExplicitSize && hasEstimate) {
-      builder = builder.use(withAutoSize());
+      plugins.push(autosize());
     }
 
-    if (configRef.current.adapter) {
-      builder = builder.use(
-        withAsync({
-          adapter: configRef.current.adapter,
-          ...(configRef.current.loading && {
-            loading: configRef.current.loading,
-          }),
+    if (cfg.adapter) {
+      plugins.push(
+        asyncPlugin({
+          adapter: cfg.adapter,
+          ...(cfg.loading && { loading: cfg.loading }),
         }),
       );
     }
 
-    if (configRef.current.layout === "grid" && configRef.current.grid) {
-      builder = builder.use(withGrid(configRef.current.grid));
+    if (cfg.layout === "grid" && cfg.grid) {
+      plugins.push(grid(cfg.grid));
     }
 
-    if (configRef.current.layout === "masonry" && configRef.current.masonry) {
-      builder = builder.use(withMasonry(configRef.current.masonry));
+    if (cfg.layout === "masonry" && cfg.masonry) {
+      plugins.push(masonry(cfg.masonry));
     }
 
-    if (configRef.current.groups) {
-      const groupsConfig = configRef.current.groups;
+    if (cfg.groups) {
+      const groupsConfig = cfg.groups;
       const headerHeight =
         typeof groupsConfig.headerHeight === "function"
           ? groupsConfig.headerHeight("", 0)
           : groupsConfig.headerHeight;
-
-      builder = builder.use(
-        withGroups({
+      plugins.push(
+        groups({
           getGroupForIndex: groupsConfig.getGroupForIndex,
           headerHeight,
           headerTemplate: groupsConfig.headerTemplate,
-          ...(groupsConfig.sticky !== undefined && {
-            sticky: groupsConfig.sticky,
-          }),
+          ...(groupsConfig.sticky !== undefined && { sticky: groupsConfig.sticky }),
         }),
       );
     }
 
-    const selectionMode = configRef.current.selection?.mode || "none";
+    const selectionMode = cfg.selection?.mode || "none";
     if (selectionMode !== "none") {
-      builder = builder.use(withSelection(configRef.current.selection));
+      plugins.push(selection(cfg.selection));
     } else {
-      builder = builder.use(withSelection({ mode: "none" }));
+      plugins.push(selection({ mode: "none" }));
     }
 
-    builder = builder.use(withScale());
+    plugins.push(scale());
 
-    const scrollbarConfig =
-      configRef.current.scroll?.scrollbar || configRef.current.scrollbar;
+    const scrollbarConfig = cfg.scroll?.scrollbar || cfg.scrollbar;
     if (scrollbarConfig !== "none") {
       const scrollbarOptions =
         typeof scrollbarConfig === "object" ? scrollbarConfig : {};
-      builder = builder.use(withScrollbar(scrollbarOptions));
+      plugins.push(scrollbar(scrollbarOptions));
     }
 
-    builder = builder.use(withSnapshots());
+    plugins.push(snapshots());
 
-    const instance = builder.build();
+    const instance = createVListCore<T>({ ...cfg, container }, plugins);
     instanceRef.current = instance;
     mountedRef.current = true;
 

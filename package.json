@@ -32,7 +32,7 @@
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "vlist": "^2.0.0",
+    "vlist": "^2.6.0",
     "react": ">=17.0.0"
   },
   "files": [
@@ -43,15 +43,19 @@
   "scripts": {
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {
-    "vlist": "file:../vlist",
+    "@happy-dom/global-registrator": "^20.9.0",
     "@types/bun": "^1.0.0",
     "@types/react": "^19.2.13",
+    "@types/react-dom": "^19",
     "bun": "^1.0.0",
-    "react": "^19.2.4",
-    "typescript": "^5.0.0"
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "typescript": "^5.0.0",
+    "vlist": "file:../vlist"
   }
 }

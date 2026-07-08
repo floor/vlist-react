@@ -9,23 +9,9 @@ import type {
   VListEvents,
   EventHandler,
   Unsubscribe,
-  CreateVListConfig,
+  VList,
 } from "vlist";
-import {
-  createVList as createVListCore,
-  page,
-  autosize,
-  data as dataPlugin,
-  grid,
-  masonry,
-  groups,
-  selection,
-  scale,
-  scrollbar,
-  snapshots,
-  type VList,
-  type VListPlugin,
-} from "vlist";
+import { createVListFromConfig, type VListConfig } from "vlist/config";
 
 // Re-export types that appear in UseVListConfig / UseVListReturn
 export type {
@@ -38,11 +24,14 @@ export type {
   EventHandler,
   Unsubscribe,
 } from "vlist";
+export type { VListConfig } from "vlist/config";
 
-export type UseVListConfig<T extends VListItem = VListItem> = Omit<
-  CreateVListConfig<T>,
-  "container"
->;
+/**
+ * Configuration for {@link useVList}. This is vlist's high-level `VListConfig`
+ * (feature fields like `layout`, `grid`, `selection`, `plugins` are translated
+ * into plugins automatically) minus `container`, which the hook owns via a ref.
+ */
+export type UseVListConfig<T extends VListItem = VListItem> = VListConfig<T>;
 
 export interface UseVListReturn<T extends VListItem = VListItem> {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -63,76 +52,7 @@ export function useVList<T extends VListItem = VListItem>(
     const container = containerRef.current;
     if (!container) return;
 
-    const cfg = configRef.current;
-    const plugins: VListPlugin<T>[] = [];
-
-    if (cfg.scroll?.element === window) {
-      plugins.push(page());
-    }
-
-    // Auto-detect Mode B
-    const item = cfg.item;
-    const isHorizontal = cfg.orientation === "horizontal";
-    const hasExplicitSize = isHorizontal ? item.width != null : item.height != null;
-    const hasEstimate = isHorizontal
-      ? (item as unknown as Record<string, unknown>).estimatedWidth != null
-      : (item as unknown as Record<string, unknown>).estimatedHeight != null;
-    if (!hasExplicitSize && hasEstimate) {
-      plugins.push(autosize());
-    }
-
-    if (cfg.adapter) {
-      plugins.push(
-        dataPlugin({
-          adapter: cfg.adapter,
-          ...(cfg.loading && { loading: cfg.loading }),
-        }),
-      );
-    }
-
-    if (cfg.layout === "grid" && cfg.grid) {
-      plugins.push(grid(cfg.grid));
-    }
-
-    if (cfg.layout === "masonry" && cfg.masonry) {
-      plugins.push(masonry(cfg.masonry));
-    }
-
-    if (cfg.groups) {
-      const groupsConfig = cfg.groups;
-      const headerHeight =
-        typeof groupsConfig.headerHeight === "function"
-          ? groupsConfig.headerHeight("", 0)
-          : groupsConfig.headerHeight;
-      plugins.push(
-        groups({
-          getGroupForIndex: groupsConfig.getGroupForIndex,
-          headerHeight,
-          headerTemplate: groupsConfig.headerTemplate,
-          ...(groupsConfig.sticky !== undefined && { sticky: groupsConfig.sticky }),
-        }),
-      );
-    }
-
-    const selectionMode = cfg.selection?.mode || "none";
-    if (selectionMode !== "none") {
-      plugins.push(selection(cfg.selection));
-    } else {
-      plugins.push(selection({ mode: "none" }));
-    }
-
-    plugins.push(scale());
-
-    const scrollbarConfig = cfg.scroll?.scrollbar || cfg.scrollbar;
-    if (scrollbarConfig !== "none") {
-      const scrollbarOptions =
-        typeof scrollbarConfig === "object" ? scrollbarConfig : {};
-      plugins.push(scrollbar(scrollbarOptions));
-    }
-
-    plugins.push(snapshots());
-
-    const instance = createVListCore<T>({ ...cfg, container }, plugins);
+    const instance = createVListFromConfig<T>({ ...configRef.current, container });
     instanceRef.current = instance;
     mountedRef.current = true;
 

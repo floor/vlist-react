@@ -16,7 +16,7 @@ async function build() {
     minify: !isDev,
     sourcemap: isDev ? "inline" : "none",
     naming: "index.js",
-    external: ["react", "@floor/vlist"],
+    external: ["react", "vlist", "vlist/config"],
   });
 
   if (!buildResult.success) {
@@ -35,7 +35,7 @@ async function build() {
   console.log(`  Build       ${buildTime.toFixed(0).padStart(6)}ms  ${size} KB`);
   
   const dtsStart = performance.now();
-  const tsc = await $`bunx tsc --emitDeclarationOnly`.quiet().nothrow();
+  const tsc = await $`bunx tsc -p tsconfig.build.json --emitDeclarationOnly`.quiet().nothrow();
   if (tsc.exitCode !== 0) {
     console.error("\n⚠️  TypeScript generation failed (skipping types)");
   } else {

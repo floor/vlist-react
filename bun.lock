@@ -17,7 +17,7 @@
       },
       "peerDependencies": {
         "react": ">=17.0.0",
-        "vlist": "^2.6.0",
+        "vlist": "^2.8.0",
       },
     },
   },

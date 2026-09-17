@@ -11,7 +11,7 @@ import type {
   Unsubscribe,
   VList,
 } from "vlist";
-import { createVListFromConfig, type VListConfig } from "vlist/config";
+import { createVListFromConfig, type VListConfig, type ConfigItem, type ConfigMethods } from "vlist/config";
 
 // Re-export types that appear in UseVListConfig / UseVListReturn
 export type {
@@ -24,7 +24,7 @@ export type {
   EventHandler,
   Unsubscribe,
 } from "vlist";
-export type { VListConfig, VListFactory } from "vlist/config";
+export type { VListConfig, VListFactory, ConfigItem, ConfigMethods } from "vlist/config";
 
 /**
  * Configuration for {@link useVList}. This is vlist's high-level `VListConfig`
@@ -33,17 +33,31 @@ export type { VListConfig, VListFactory } from "vlist/config";
  */
 export type UseVListConfig<T extends VListItem = VListItem> = VListConfig<T>;
 
-export interface UseVListReturn<T extends VListItem = VListItem> {
+/**
+ * The list a config builds: its item type read from `items` or the template,
+ * and the methods its feature fields wire — `selection` brings `select()`,
+ * `adapter` brings `reload()`, `layout: "grid"` brings `getGridLayout()`.
+ */
+export type UseVListInstance<C extends UseVListConfig<any>> =
+  VList<ConfigItem<C>> & ConfigMethods<ConfigItem<C>, C>;
+
+export interface UseVListReturn<C extends UseVListConfig<any>> {
   containerRef: React.RefObject<HTMLDivElement | null>;
-  instanceRef: React.RefObject<VList<T> | null>;
-  getInstance: () => VList<T> | null;
+  instanceRef: React.RefObject<UseVListInstance<C> | null>;
+  getInstance: () => UseVListInstance<C> | null;
 }
 
-export function useVList<T extends VListItem = VListItem>(
-  config: UseVListConfig<T>,
-): UseVListReturn<T> {
+/**
+ * One type parameter, the config itself, inferred from the argument. Do not
+ * pass a type argument: the item type comes from `items` or `item.template`,
+ * and the plugin methods from the feature fields. `useVList<Row>(…)` names a
+ * config type where an item type was meant and does not compile.
+ */
+export function useVList<const C extends UseVListConfig<any>>(
+  config: C,
+): UseVListReturn<C> {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const instanceRef = useRef<VList<T> | null>(null);
+  const instanceRef = useRef<UseVListInstance<C> | null>(null);
   const configRef = useRef(config);
   configRef.current = config;
   const mountedRef = useRef(false);
@@ -52,7 +66,7 @@ export function useVList<T extends VListItem = VListItem>(
     const container = containerRef.current;
     if (!container) return;
 
-    const instance = createVListFromConfig<T>({ ...configRef.current, container });
+    const instance = createVListFromConfig({ ...configRef.current, container }) as UseVListInstance<C>;
     instanceRef.current = instance;
     mountedRef.current = true;
 
@@ -70,7 +84,7 @@ export function useVList<T extends VListItem = VListItem>(
     }
   }, [config.items]);
 
-  const getInstance = useCallback((): VList<T> | null => {
+  const getInstance = useCallback((): UseVListInstance<C> | null => {
     return instanceRef.current;
   }, []);
 

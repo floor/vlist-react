@@ -32,7 +32,7 @@
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "vlist": "^2.8.0",
+    "vlist": "^3.0.0-next.3",
     "react": ">=17.0.0"
   },
   "files": [
@@ -56,6 +56,6 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "typescript": "^5.0.0",
-    "vlist": "file:../vlist"
+    "vlist": "3.0.0-next.3"
   }
 }

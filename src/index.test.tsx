@@ -18,7 +18,7 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useVList } from "./index";
-import { grid, autosize, type VListItem } from "vlist";
+import { grid, autosize, type VListItem, type VList } from "vlist";
 
 // react's act() requires this flag to flush effects deterministically.
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -62,7 +62,9 @@ function installLayoutShims(): () => void {
           {
             target,
             contentRect: { width: VIEWPORT_W, height: VIEWPORT_H } as DOMRectReadOnly,
-          } as ResizeObserverEntry,
+            borderBoxSize: [{ inlineSize: VIEWPORT_W, blockSize: VIEWPORT_H }],
+            contentBoxSize: [{ inlineSize: VIEWPORT_W, blockSize: VIEWPORT_H }],
+          } as unknown as ResizeObserverEntry,
         ],
         this as unknown as ResizeObserver,
       );
@@ -110,10 +112,10 @@ async function mount(el: React.ReactElement): Promise<{ host: HTMLElement; root:
 
 describe("useVList — render", () => {
   it("mounts and virtualizes a large list", async () => {
-    let instance: ReturnType<typeof useVList<Row>>["getInstance"] | null = null;
+    let instance: (() => VList<Row> | null) | null = null;
 
     function List() {
-      const { containerRef, getInstance } = useVList<Row>({
+      const { containerRef, getInstance } = useVList({
         item: { height: 40, template },
         items: rows(1000),
       });
@@ -138,10 +140,10 @@ describe("useVList — render", () => {
   });
 
   it("tears down the instance on unmount", async () => {
-    let getInstance: ReturnType<typeof useVList<Row>>["getInstance"] | null = null;
+    let getInstance: (() => VList<Row> | null) | null = null;
 
     function List() {
-      const hook = useVList<Row>({ item: { height: 40, template }, items: rows(100) });
+      const hook = useVList({ item: { height: 40, template }, items: rows(100) });
       getInstance = hook.getInstance;
       return <div ref={hook.containerRef} style={{ height: VIEWPORT_H }} />;
     }
@@ -156,15 +158,17 @@ describe("useVList — render", () => {
   });
 
   it("#119: accepts and runs a plugins array overlapping auto-wiring", async () => {
-    let getInstance: ReturnType<typeof useVList<Row>>["getInstance"] | null = null;
+    let getInstance: (() => VList<Row> | null) | null = null;
 
     function List() {
-      // estimatedHeight auto-wires autosize; the user also passes autosize + grid.
-      // Must not throw "Duplicate plugin".
-      const hook = useVList<Row>({
+      // estimatedHeight auto-wires autosize(); the user passes autosize() too.
+      // The user's replaces the auto-wired one — one plugin, not a duplicate.
+      // (grid + autosize, the 2.x form of this test, is a declared conflict in
+      // 3.0: grid indexes its size cache by row.)
+      const hook = useVList({
         item: { estimatedHeight: 200, template },
         items: rows(200),
-        plugins: [grid({ columns: 3 }), autosize()],
+        plugins: [autosize()],
       });
       getInstance = hook.getInstance;
       return <div ref={hook.containerRef} style={{ height: VIEWPORT_H }} />;
@@ -172,7 +176,6 @@ describe("useVList — render", () => {
 
     const { host, root } = await mount(<List />);
     expect(getInstance!()).not.toBeNull();
-    // grid layout took effect → items rendered.
     expect(host.querySelectorAll(".row").length).toBeGreaterThan(0);
 
     await act(async () => {
@@ -191,8 +194,8 @@ it("forwards a typed synthetic factory and creates the synthetic driver", async 
     return createSynthetic(config, plugins);
   };
   function List() {
-    const { containerRef } = useVList<Row>({
-      factory, scroll: { mode: "synthetic" }, items: rows(100), item: { height: 40, template },
+    const { containerRef } = useVList({
+      factory, items: rows(100), item: { height: 40, template },
     });
     return <div ref={containerRef} style={{ height: VIEWPORT_H }} />;
   }
@@ -200,6 +203,7 @@ it("forwards a typed synthetic factory and creates the synthetic driver", async 
   try {
     expect(calls).toBe(1);
     expect(host.querySelector<HTMLElement>(".vlist-viewport")!.style.touchAction).toBe("pan-x pinch-zoom");
-    expect(pluginNames).toEqual(["selection", "scale", "scrollbar", "snapshots"]);
+    // 3.0 wires only what the config asks for: no feature fields, no plugins.
+    expect(pluginNames).toEqual([]);
   } finally { await act(async () => root.unmount()); host.remove(); }
 });

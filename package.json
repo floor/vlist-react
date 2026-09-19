@@ -1,6 +1,6 @@
 {
   "name": "vlist-react",
-  "version": "2.8.0",
+  "version": "3.0.0-next.1",
   "description": "React hooks for vlist - lightweight virtual scrolling",
   "author": {
     "name": "Floor IO",
@@ -32,7 +32,7 @@
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "vlist": "^2.8.0",
+    "vlist": "^3.0.0-next.1",
     "react": ">=17.0.0"
   },
   "files": [

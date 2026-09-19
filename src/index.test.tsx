@@ -18,7 +18,7 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useVList } from "./index";
-import { grid, autosize, type VListItem } from "vlist";
+import { autosize, selection, type VListItem } from "vlist";
 
 // react's act() requires this flag to flush effects deterministically.
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -62,6 +62,9 @@ function installLayoutShims(): () => void {
           {
             target,
             contentRect: { width: VIEWPORT_W, height: VIEWPORT_H } as DOMRectReadOnly,
+            // A real ResizeObserverEntry carries both, and autosize() measures
+            // the border box. Without this the shim crashes it.
+            borderBoxSize: [{ inlineSize: VIEWPORT_W, blockSize: VIEWPORT_H }] as unknown as readonly ResizeObserverSize[],
           } as ResizeObserverEntry,
         ],
         this as unknown as ResizeObserver,
@@ -159,12 +162,14 @@ describe("useVList — render", () => {
     let getInstance: ReturnType<typeof useVList<Row>>["getInstance"] | null = null;
 
     function List() {
-      // estimatedHeight auto-wires autosize; the user also passes autosize + grid.
-      // Must not throw "Duplicate plugin".
+      // estimatedHeight auto-wires autosize; the user passes autosize() as well.
+      // Must not throw "Duplicate plugin". (Until 3.0 this also passed grid(),
+      // which declares a conflict with autosize — a combination vlist refuses
+      // by design, and beside the point of #119.)
       const hook = useVList<Row>({
         item: { estimatedHeight: 200, template },
         items: rows(200),
-        plugins: [grid({ columns: 3 }), autosize()],
+        plugins: [autosize(), selection({ mode: "single" })],
       });
       getInstance = hook.getInstance;
       return <div ref={hook.containerRef} style={{ height: VIEWPORT_H }} />;
@@ -172,7 +177,7 @@ describe("useVList — render", () => {
 
     const { host, root } = await mount(<List />);
     expect(getInstance!()).not.toBeNull();
-    // grid layout took effect → items rendered.
+    // It ran rather than throwing: items are on screen.
     expect(host.querySelectorAll(".row").length).toBeGreaterThan(0);
 
     await act(async () => {
@@ -191,8 +196,11 @@ it("forwards a typed synthetic factory and creates the synthetic driver", async 
     return createSynthetic(config, plugins);
   };
   function List() {
+    // vlist 3: the factory is what selects synthetic input — `scroll.mode` is gone,
+    // and with it the plugins that option used to wire. A feature field still
+    // resolves to a plugin, which is what proves the hook forwards them.
     const { containerRef } = useVList<Row>({
-      factory, scroll: { mode: "synthetic" }, items: rows(100), item: { height: 40, template },
+      factory, items: rows(100), item: { height: 40, template }, selection: { mode: "single" },
     });
     return <div ref={containerRef} style={{ height: VIEWPORT_H }} />;
   }
@@ -200,6 +208,6 @@ it("forwards a typed synthetic factory and creates the synthetic driver", async 
   try {
     expect(calls).toBe(1);
     expect(host.querySelector<HTMLElement>(".vlist-viewport")!.style.touchAction).toBe("pan-x pinch-zoom");
-    expect(pluginNames).toEqual(["selection", "scale", "scrollbar", "snapshots"]);
+    expect(pluginNames).toEqual(["selection"]);
   } finally { await act(async () => root.unmount()); host.remove(); }
 });

@@ -5,7 +5,7 @@ const isDev = process.argv.includes("--watch");
 
 async function build() {
   const start = performance.now();
-  console.log("🔨 Building @floor/vlist-react...\n");
+  console.log("🔨 Building vlist-react...\n");
 
   // Build the React adapter
   const buildResult = await Bun.build({

@@ -1,0 +1,80 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      # `bun run test`, not `bun test`: the script carries the flags this
+      # package needs (vlist-solidjs resolves solid-js/web to its server build
+      # without --conditions browser, and every test dies).
+      - name: Test
+        run: bun run test
+
+      # The adapter's own build emits dist/index.js and dist/index.d.ts; there
+      # is no --types flag here, unlike vlist.
+      - name: Build
+        run: bun run build
+
+      # Trusted publishing needs npm 11.5.1 or later; setup-node ships 10.x
+      - name: Newer npm
+        run: npm install -g npm@latest
+
+      # No NODE_AUTH_TOKEN: the workflow's own OIDC identity is what npm
+      # trusts. The package's trusted publisher must name this repository and
+      # this file (`npm trust github <package> --file publish.yml --repo
+      # floor/<repo> --allow-publish`), or the publish answers 404.
+      # The tag must name the version in package.json, or nothing is published.
+      - name: Check tag matches version
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+
+      # Prereleases (a version with a hyphen, e.g. 3.0.0-next.1) go to the npm
+      # `next` dist-tag so `latest` is never moved by a prerelease. Provenance
+      # is attached by default under trusted publishing.
+      - name: Publish
+        run: |
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            npm publish --access public --tag next
+          else
+            npm publish --access public
+          fi
+
+      - name: Create GitHub Release
+        run: |
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --prerelease
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

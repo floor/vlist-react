@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [3.1.0-next.2] - 2026-09-28
+
+### Changed
+
+- For vlist 3.1: `peerDependencies.vlist` is `^3.0.0 || ^3.1.0-next.2`. The 3.0.1-next.1 range
+  did not admit a 3.1.0 prerelease (a prerelease only matches a range naming its own version),
+  so installing it beside `vlist@next` failed with a peer conflict. Tests run against
+  `vlist@3.1.0-next.2`.
+
 ## [3.0.1-next.1] - 2026-09-27
 
 ### Changed

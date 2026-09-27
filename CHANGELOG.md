@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [3.0.1-next.1] - 2026-09-27
+
+### Changed
+
+- For vlist 3.0.1: `peerDependencies.vlist` is `^3.0.0 || ^3.0.1-next.1`, since a `^3.0.0`
+  range does not admit the prerelease; tests run against `vlist@3.0.1-next.1`.
+- The README selects synthetic input with `scroll: { mode: "synthetic" }`, which the adapter
+  forwards unchanged. The default, `"auto"`, hands a list past the browser's size limit to
+  synthetic input by itself, and a synthetic list draws its own scrollbar.
+
 ## [3.0.0-next.1] - 2026-09-19
 
 ### Changed

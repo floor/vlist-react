@@ -40,17 +40,16 @@ Full usage guide, feature config examples, and TypeScript types: **[Framework Ad
 
 ## Synthetic input
 
-Requires `vlist ^3.0.0-next.1`. Pass the synthetic entry as `factory` to opt in; the adapter forwards it unchanged through `vlist/config`. `VListFactory` is re-exported for typed custom factories. The factory is selected at mount; remount to change it.
+Every list scrolls natively by default, and hands itself to synthetic input past the browser's element size limit: `scroll.mode` is `"auto"`. Pass `scroll: { mode: "synthetic" }` for synthetic input from the start, or `"native"` to stay native; the adapter forwards `scroll` unchanged through `vlist/config`. A synthetic list draws its own scrollbar. Requires `vlist ^3.0.1-next.1`; on 3.0.0, pass `factory: createVList` from the deprecated `vlist/synthetic`. `VListFactory` is re-exported for typed custom factories.
 
 ```tsx
 import { useVList } from "vlist-react";
-import { createVList } from "vlist/synthetic";
 
 function Rows({ items }: { items: { id: number }[] }) {
   const { containerRef } = useVList({
-    factory: createVList,
     items,
     item: { height: 48, template: item => String(item.id) },
+    scroll: { mode: "synthetic" },
   });
   return <div ref={containerRef} style={{ height: 400 }} />;
 }

@@ -16,7 +16,7 @@ async function build() {
     minify: !isDev,
     sourcemap: isDev ? "inline" : "none",
     naming: "index.js",
-    external: ["react", "vlist", "vlist/config"],
+    external: ["react", "vlist", "vlist/config", "vlist/react"],
   });
 
   if (!buildResult.success) {

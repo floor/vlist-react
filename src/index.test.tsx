@@ -15,9 +15,9 @@ import type { VListFactory } from "./index";
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { useVList } from "./index";
+import { useVList, useVListEvent } from "./index";
 import { autosize, selection, type VListItem } from "vlist";
 
 // react's act() requires this flag to flush effects deterministically.
@@ -227,4 +227,50 @@ it("forwards scroll.mode: the list goes synthetic and draws its scrollbar", asyn
     expect(viewport.style.touchAction).toBe("pan-x pinch-zoom");
     expect(host.querySelectorAll(".vlist-scrollbar")).toHaveLength(1);
   } finally { await act(async () => root.unmount()); host.remove(); }
+});
+
+describe("3.1 compat: the config API on vlist/react", () => {
+  it("resolves a feature field to its plugin", async () => {
+    let getInstance: (() => unknown) | null = null;
+    function List() {
+      const hook = useVList<Row>({ item: { height: 40, template }, items: rows(10), selection: { mode: "single" } });
+      getInstance = hook.getInstance;
+      return <div ref={hook.containerRef} style={{ height: VIEWPORT_H }} />;
+    }
+    const { root } = await mount(<List />);
+    const list = getInstance!() as { select(id: string): void; getSelected(): unknown[] };
+    list.select("row-2");
+    expect(list.getSelected()).toEqual(["row-2"]);
+    await act(async () => { root.unmount(); });
+  });
+
+  it("updates the list when items change", async () => {
+    let grow: () => void = () => {};
+    function List() {
+      const [items, setItems] = useState(rows(3));
+      grow = () => setItems(rows(5));
+      const { containerRef } = useVList<Row>({ item: { height: 40, template }, items });
+      return <div ref={containerRef} style={{ height: VIEWPORT_H }} />;
+    }
+    const { host, root } = await mount(<List />);
+    expect(host.querySelectorAll(".row").length).toBe(3);
+    await act(async () => { grow(); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
+    expect(host.querySelectorAll(".row").length).toBe(5);
+    await act(async () => { root.unmount(); });
+  });
+
+  it("useVListEvent receives the list's events", async () => {
+    const clicked: string[] = [];
+    function List() {
+      const { containerRef, instanceRef } = useVList<Row>({ item: { height: 40, template }, items: rows(10) });
+      useVListEvent(instanceRef, "item:click", ({ item }) => { clicked.push(item.id); });
+      return <div ref={containerRef} style={{ height: VIEWPORT_H }} />;
+    }
+    const { host, root } = await mount(<List />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
+    host.querySelector<HTMLElement>('[data-index="2"]')!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(clicked).toEqual(["row-2"]);
+    await act(async () => { root.unmount(); });
+  });
 });

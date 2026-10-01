@@ -1,17 +1,20 @@
 // vlist-react
 /**
  * React hooks for vlist - lightweight virtual scrolling
+ *
+ * Deprecated: use `vlist/react` from the vlist package, which takes features
+ * as plugins (`useVList({ items, item }, [selection()])`). This package keeps
+ * the config-based API on top of it: the hooks are `vlist/react`'s, building
+ * the list with `createVListFromConfig` so feature fields still resolve to
+ * plugins.
  */
 
-import { useRef, useEffect, useCallback } from "react";
-import type {
-  VListItem,
-  VListEvents,
-  EventHandler,
-  Unsubscribe,
-  VList,
-} from "vlist";
+import type { RefObject } from "react";
+import type { VListItem, VList } from "vlist";
 import { createVListFromConfig, type VListConfig } from "vlist/config";
+import { useVList as useEntry, useVListEvent } from "vlist/react";
+
+export { useVListEvent };
 
 // Re-export types that appear in UseVListConfig / UseVListReturn
 export type {
@@ -34,76 +37,16 @@ export type { VListConfig, VListFactory } from "vlist/config";
 export type UseVListConfig<T extends VListItem = VListItem> = VListConfig<T>;
 
 export interface UseVListReturn<T extends VListItem = VListItem> {
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  instanceRef: React.RefObject<VList<T> | null>;
+  containerRef: RefObject<HTMLDivElement | null>;
+  instanceRef: RefObject<VList<T> | null>;
   getInstance: () => VList<T> | null;
 }
+
+/** `vlist/react`'s factory argument: builds from the whole config. */
+const fromConfig = createVListFromConfig as unknown as Parameters<typeof useEntry>[2];
 
 export function useVList<T extends VListItem = VListItem>(
   config: UseVListConfig<T>,
 ): UseVListReturn<T> {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const instanceRef = useRef<VList<T> | null>(null);
-  const configRef = useRef(config);
-  configRef.current = config;
-  const mountedRef = useRef(false);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // No type argument: vlist 3 takes two (the item and the config, so the
-    // instance carries the methods the config's feature fields imply), and
-    // both are inferred from the argument.
-    const instance = createVListFromConfig({ ...configRef.current, container });
-    instanceRef.current = instance;
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
-      instance.destroy();
-      instanceRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mountedRef.current || !instanceRef.current) return;
-    if (config.items) {
-      instanceRef.current.setItems(config.items);
-    }
-  }, [config.items]);
-
-  const getInstance = useCallback((): VList<T> | null => {
-    return instanceRef.current;
-  }, []);
-
-  return {
-    containerRef,
-    instanceRef,
-    getInstance,
-  };
-}
-
-export function useVListEvent<
-  T extends VListItem,
-  K extends keyof VListEvents<T>,
->(
-  instanceRef: React.RefObject<VList<T> | null>,
-  event: K,
-  handler: EventHandler<VListEvents<T>[K]>,
-): void {
-  const handlerRef = useRef(handler);
-  handlerRef.current = handler;
-
-  useEffect(() => {
-    const instance = instanceRef.current;
-    if (!instance) return;
-
-    const wrappedHandler: EventHandler<VListEvents<T>[K]> = (payload) => {
-      handlerRef.current(payload);
-    };
-
-    const unsub: Unsubscribe = instance.on(event, wrappedHandler);
-    return unsub;
-  }, [instanceRef.current, event]);
+  return useEntry<T>(config as Parameters<typeof useEntry<T>>[0], [], fromConfig) as UseVListReturn<T>;
 }

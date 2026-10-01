@@ -15,7 +15,7 @@ React hooks for [vlist](https://github.com/floor/vlist) — lightweight, zero-de
 > useVList({ items, item }, [selection({ mode: "single" })]);
 > ```
 >
-> From 3.1 this package is built on `vlist/react` and keeps its config-based API, so existing code keeps working while you migrate. It needs `vlist ^3.1.0-next.3`; on vlist 3.0.x, stay on `vlist-react` 3.0.x.
+> From 3.1 this package is built on `vlist/react` and keeps its config-based API, so existing code keeps working while you migrate. It needs `vlist ^3.1.0`; on vlist 3.0.x, stay on `vlist-react` 3.0.x.
 
 ## Install
 
@@ -55,7 +55,7 @@ Full usage guide, feature config examples, and TypeScript types: **[Framework Ad
 
 ## Synthetic input
 
-Every list scrolls natively by default, and hands itself to synthetic input past the browser's element size limit: `scroll.mode` is `"auto"`. Pass `scroll: { mode: "synthetic" }` for synthetic input from the start, or `"native"` to stay native; the adapter forwards `scroll` unchanged through `vlist/config`. A synthetic list draws its own scrollbar. Requires `vlist ^3.1.0-next.3`. A carousel honours `"synthetic"` too. `VListFactory` is re-exported for typed custom factories.
+Every list scrolls natively by default, and hands itself to synthetic input past the browser's element size limit: `scroll.mode` is `"auto"`. Pass `scroll: { mode: "synthetic" }` for synthetic input from the start, or `"native"` to stay native; the adapter forwards `scroll` unchanged through `vlist/config`. A synthetic list draws its own scrollbar. Requires `vlist ^3.1.0`. A carousel honours `"synthetic"` too. `VListFactory` is re-exported for typed custom factories.
 
 ```tsx
 import { useVList } from "vlist-react";

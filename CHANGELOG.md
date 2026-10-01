@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-01
+
+The stable release of 3.1.0-next.3, for vlist 3.1.0. This package is deprecated: use
+`vlist/react` from the `vlist` package (see the README for the migration). Built on `vlist/react`,
+it keeps its config-based API.
+
+### Changed
+
+- `peerDependencies.vlist` is `^3.1.0`, the stable range, which admits every later 3.x release.
+  Tests run against `vlist@3.1.0`.
+
 ## [3.1.0-next.3] - 2026-10-01
 
 ### Deprecated

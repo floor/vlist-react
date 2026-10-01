@@ -13,11 +13,11 @@
         "react": "19.2.7",
         "react-dom": "19.2.7",
         "typescript": "^5.0.0",
-        "vlist": "3.1.0-next.3",
+        "vlist": "3.1.0",
       },
       "peerDependencies": {
         "react": ">=17.0.0",
-        "vlist": "^3.0.0 || ^3.1.0-next.2",
+        "vlist": "^3.1.0-next.3",
       },
     },
   },
@@ -82,7 +82,7 @@
 
     "undici-types": ["undici-types@7.19.2", "", {}, "sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg=="],
 
-    "vlist": ["vlist@3.1.0-next.3", "", { "peerDependencies": { "react": ">=17.0.0", "solid-js": ">=1.6.0", "svelte": ">=4.0.0", "vue": ">=3.0.0" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-JkP8+Blfcd4gVH6gZA+UXAAmC4MqMSxUtnndO4j154C40VaPYnYEyWgMAkaHbhOX2CC1Yf059eoFkkKiPWBWgQ=="],
+    "vlist": ["vlist@3.1.0", "", { "peerDependencies": { "react": ">=17.0.0", "solid-js": ">=1.6.0", "svelte": ">=4.0.0", "vue": ">=3.0.0" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-j+HmJJJj4USnbrMgf/KrR6f7m5QsF4WEx3uSDqcuvnf/vJujeYKGKN7+XyM0LkdUKsc7BBYJbiMuTqr3HuppYA=="],
 
     "whatwg-mimetype": ["whatwg-mimetype@3.0.0", "", {}, "sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q=="],
 

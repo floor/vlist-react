@@ -66,8 +66,8 @@ export interface UseVListReturn<
 
 type WithPlugin<T extends VListItem, M> = Omit<UseVListConfig<T>, "plugins"> & {
   plugins:
-    | readonly [VListPlugin<any, M>, ...(readonly VListPlugin<any, any>[])]
-    | readonly [...(readonly VListPlugin<any, any>[]), VListPlugin<any, M>];
+    | readonly [VListPlugin<T, M>, ...(readonly VListPlugin<T, unknown>[])]
+    | readonly [...(readonly VListPlugin<T, unknown>[]), VListPlugin<T, M>];
 };
 
 /** `vlist/react`'s factory argument: builds from the whole config. */

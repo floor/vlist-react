@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- `UseVListReturn` (`instanceRef` and `getInstance`) carries the plugin methods resolved from the config (`ConfigMethods`), including `table({ features: [columnPin(), columnReorder()] })` when passed in `plugins` (with or without an explicit `<T>` type argument on `useVList` or `table`).
+- Re-export `TableColumn`, `TablePluginConfig`, `TableMethods`, `TableFeature`, `TableFeatureMethods`, `ColumnPinConfig`, `ColumnPinMethods`, `ColumnReorderConfig`, `ColumnReorderMethods`, `VListPlugin`, and `ConfigMethods`.
+- Document `table({ features })` with `columnPin()` and `columnReorder()` in the README.
+
+### Changed
+
+- `peerDependencies.vlist` is `^3.7.0` (which exports `TableColumn` and types `table<Row>({ features })`). Tests run against `vlist@3.7.2`.
+
 ## [3.1.0] - 2026-10-01
 
 The stable release of 3.1.0-next.3, for vlist 3.1.0. This package is deprecated: use

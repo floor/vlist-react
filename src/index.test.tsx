@@ -17,8 +17,8 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { useVList, useVListEvent } from "./index";
-import { autosize, selection, type VListItem } from "vlist";
+import { useVList, useVListEvent, type TableColumn } from "./index";
+import { autosize, columnPin, columnReorder, selection, table, type VListItem } from "vlist";
 
 // react's act() requires this flag to flush effects deterministically.
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -271,6 +271,89 @@ describe("3.1 compat: the config API on vlist/react", () => {
     await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
     host.querySelector<HTMLElement>('[data-index="2"]')!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(clicked).toEqual(["row-2"]);
+    await act(async () => { root.unmount(); });
+  });
+
+  it("types and runs table({ features: [columnPin(), columnReorder()] }) without casts", async () => {
+    interface TableRow extends VListItem {
+      id: string;
+      name: string;
+      role: string;
+    }
+    const columns: TableColumn<TableRow>[] = [
+      { key: "name", label: "Name", width: 150 },
+      { key: "role", label: "Role", width: 100 },
+    ];
+    const tableRows: TableRow[] = [
+      { id: "1", name: "Ada", role: "Engineer" },
+      { id: "2", name: "Grace", role: "Architect" },
+    ];
+
+    let orderAfterMove: string[] = [];
+    let pinsAfterPin: Record<string, "left" | "right"> = {};
+
+    function InferredTable() {
+      const { containerRef, instanceRef, getInstance } = useVList({
+        items: tableRows,
+        item: { height: 40, template: (r) => r.name },
+        plugins: [
+          table({
+            columns,
+            rowHeight: 40,
+            features: [columnPin(), columnReorder()],
+          }),
+        ],
+      });
+      return (
+        <div
+          ref={containerRef}
+          style={{ height: VIEWPORT_H }}
+          onClick={() => {
+            const list = getInstance()!;
+            list.moveColumn("role", 0);
+            orderAfterMove = list.getColumnOrder();
+            instanceRef.current!.setColumnPin("name", "left");
+            pinsAfterPin = instanceRef.current!.getColumnPins();
+          }}
+        />
+      );
+    }
+
+    function ExplicitTable() {
+      const { getInstance } = useVList<TableRow>({
+        items: tableRows,
+        item: { height: 40, template: (r) => r.name },
+        plugins: [
+          table<TableRow>({
+            columns,
+            rowHeight: 40,
+            features: [columnPin(), columnReorder()],
+          }),
+        ],
+      });
+      const PinOnly = () => {
+        const pinOnly = useVList<TableRow>({
+          items: tableRows,
+          item: { height: 40, template: (r) => r.name },
+          plugins: [table<TableRow>({ columns, rowHeight: 40, features: [columnPin()] })],
+        });
+        pinOnly.getInstance()?.setColumnPin("name", "left");
+        // @ts-expect-error columnReorder() was not configured on pinOnly
+        pinOnly.getInstance()?.moveColumn("role", 0);
+        return null;
+      };
+      void PinOnly;
+      getInstance()?.setColumnPin("name", "right");
+      getInstance()?.moveColumn("name", 1);
+      return null;
+    }
+    void ExplicitTable;
+
+    const { host, root } = await mount(<InferredTable />);
+    host.firstElementChild!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(orderAfterMove).toEqual(["role", "name"]);
+    expect(pinsAfterPin).toEqual({ name: "left" });
+    expect(host.querySelector(".vlist-table-header-cell--pin-left")).not.toBeNull();
     await act(async () => { root.unmount(); });
   });
 });

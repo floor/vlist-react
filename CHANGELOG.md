@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-12
+
+The instance types carry the table feature methods when `table({ features })` is configured, `TableColumn` and the feature types are re-exported, and the README documents the table features. Requires vlist `^3.7.0`.
+
 ### Added
 
 - `UseVListReturn` (`instanceRef` and `getInstance`) carries the plugin methods resolved from the config (`ConfigMethods`), including `table({ features: [columnPin(), columnReorder()] })` when passed in `plugins` (with or without an explicit `<T>` type argument on `useVList` or `table`).
